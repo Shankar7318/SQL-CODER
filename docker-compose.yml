@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - text2sql-network
+    restart: unless-stopped
+
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/text2sql
+    depends_on:
+      - ollama
+      - postgres
+    networks:
+      - text2sql-network
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__
+
+  # Ollama service for SQLCoder
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    networks:
+      - text2sql-network
+    restart: unless-stopped
+    command: serve
+
+  # PostgreSQL database (optional - for testing)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=text2sql
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - text2sql-network
+    restart: unless-stopped
+
+  
+  mysql:
+    image: mysql:8
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=text2sql
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - text2sql-network
+    restart: unless-stopped
+
+networks:
+  text2sql-network:
+    driver: bridge
+
+volumes:
+  ollama-models:
+  postgres-data:
+  mysql-data:
