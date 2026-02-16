@@ -65,7 +65,7 @@ The system dynamically analyzes any connected database schema, generates accurat
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/text-to-sql.git
+git clone https://github.com/Shankar7318/SQL-CODER.git
 cd text-to-sql
 ```
 
